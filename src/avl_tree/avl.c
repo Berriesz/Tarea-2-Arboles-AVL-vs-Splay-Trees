@@ -1,4 +1,5 @@
 #include "avl.h"
+#include <stdio.h>
 
 int height(AVLNode *node) {
     if (node == NULL){
