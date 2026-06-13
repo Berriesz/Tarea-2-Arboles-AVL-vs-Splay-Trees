@@ -18,5 +18,12 @@ int balanceFactor(AVLNode *node) {
 void updateHeight(AVLNode *node) {
     int hl = height(node->izq);
     int hr = height(node->der);
-    node->height = 1 + (hl > hr ? hl : hr);
+    int max_height;
+    if(hl > hr) {
+        max_height = hl;
+    }else {
+        max_height = hr;
+    }
+    node->height = 1 + max_height;
+    
 }
