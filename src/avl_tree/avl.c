@@ -140,3 +140,23 @@ AVLNode* insert(AVLNode *node, unsigned int key) {
     return balance(node);
 }
 
+
+// BUSCAR
+
+/**
+ * Busca la clave key en el subárbol con raíz node.
+ * Parámetros: node → raíz del subárbol, key → clave a buscar
+ * Retorna: 1 si se encuentra, 0 si no.
+ */
+int search(AVLNode *node, unsigned int key) {
+    if (node == NULL)
+        return 0; // no existe
+
+    if (key == node->key)
+        return 1; // encontrado
+
+    if (key < node->key)
+        return search(node->izq, key);
+    else
+        return search(node->der, key);
+}
