@@ -6,11 +6,17 @@ typedef struct AVLNode {
     struct AVLNode *izq;
     struct AVLNode *der;
     int height;
-} AVLNode
+} AVLNode;
 
 int height(AVLNode *node);
 int balanceFactor(AVLNode *node);
 void updateHeight(AVLNode *node);
+
+AVLNode* zig(AVLNode *y);
+AVLNode* zag(AVLNode *y);
+
+AVLNode* zig_zag(AVLNode *z);
+AVLNode* zag_zig(AVLNode *z);
 
 
 
