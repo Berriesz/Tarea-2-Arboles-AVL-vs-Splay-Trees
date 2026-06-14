@@ -18,6 +18,11 @@ AVLNode* zag(AVLNode *y);
 AVLNode* zig_zag(AVLNode *z);
 AVLNode* zag_zig(AVLNode *z);
 
+AVLNode* balance(AVLNode *node);
+AVLNode* insert(AVLNode *node, unsigned int key);
+AVLNode* search(AVLNode *node, unsigned int key);
+
+
 
 
 

@@ -83,3 +83,60 @@ AVLNode* zag_zig(AVLNode *z) {
     z->der = zig(z->der);
     return zag(z);
 }
+
+// BALACEAR Y INSERTAR
+
+/**
+ * Balancea un nodo si su Balance Factor es 2 o -2.
+ * Identifica el caso (LL, RR, LR, RL) y aplica la rotación correspondiente.
+ * Parámetros: node → nodo a balancear
+ * Retorna: nueva raíz del subárbol
+ */
+AVLNode* balance(AVLNode *node) {
+
+    int bf = balanceFactor(node);
+
+    // Caso LL: BF(z) = 2 y BF(hijo izq) >= 0
+    if (bf == 2 && balanceFactor(node->izq) >= 0)
+        return zig(node);
+    // Caso LR: BF(z) = 2 y BF(hijo izq) < 0
+    if (bf == 2 && balanceFactor(node->izq) < 0)
+        return zig_zag(node);
+    // Caso RR: BF(z) = -2 y BF(hijo der) <= 0
+    if (bf == -2 && balanceFactor(node->der) <= 0)
+        return zag(node);
+    // Caso RL: BF(z) = -2 y BF(hijo der) > 0
+    if (bf == -2 && balanceFactor(node->der) > 0)
+        return zag_zig(node);
+
+    return node; // ya estaba balanceado
+}
+
+/**
+ * Inserta un nuevo nodo con clave key en el subárbol con raíz node.
+ * Parámetros: node → raíz del subárbol, key → clave a insertar
+ * Retorna: nueva raíz del subárbol (puede cambiar por rotaciones)
+ */
+AVLNode* insert(AVLNode *node, unsigned int key) {
+    // Caso base
+    if (node == NULL) {
+        AVLNode *new = (AVLNode*)malloc(sizeof(AVLNode));
+        new->key = key;
+        new->izq = NULL;
+        new->der = NULL;
+        new->height = 0;
+        return new;
+    }
+
+    // recursivo
+    if (key < node->key)
+        node->izq = insert(node->izq, key);
+    else if (key > node->key)
+        node->der = insert(node->der, key);
+    else
+        return node; 
+
+    updateHeight(node);
+    return balance(node);
+}
+
