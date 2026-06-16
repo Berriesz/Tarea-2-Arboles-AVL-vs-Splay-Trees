@@ -1,8 +1,3 @@
-//
-// Created by fabia on 15/6/2026.
-//
-
-
 #include "experiments.h"
 
 #include "avl_tree/avl.h"
@@ -16,31 +11,17 @@
 
 
 /* valor escogido para la tarea */
-
 #define C 1
-
-
 /* cantidad de tamaños utilizados */
 
 #define NUM_N 5
-
-
 /* n grande para la sección 7.3 */
 
 #define LARGE_N (1<<25)
 
-
 /* tamaños solicitados en el enunciado */
 
-int Ns[NUM_N] =
-{
-    1024,
-    2048,
-    4096,
-    8192,
-    16384
-};
-
+int Ns[NUM_N] = { 1024, 2048, 4096, 8192, 16384 };
 
 /**
  * obtiene el tiempo actual de ejecución.
@@ -48,11 +29,9 @@ int Ns[NUM_N] =
  * retorna:
  * - tiempo en segundos.
  */
-double getTime()
-{
+double getTime() {
     return (double) clock() / CLOCKS_PER_SEC;
 }
-
 
 /**
  * compara dos números enteros sin signo.
@@ -66,27 +45,17 @@ double getTime()
  * - 1 si a > b.
  * - 0 si son iguales.
  */
-int compareUInt(
-        const void* a,
-        const void* b
-){
+int compareUInt(const void* a,const void* b) {
 
-    unsigned int x =
-            *(unsigned int*) a;
+    unsigned int x = *(unsigned int*) a;
+    unsigned int y = *(unsigned int*) b;
 
-    unsigned int y =
-            *(unsigned int*) b;
-
-    if(x < y)
-    {
+    if(x < y) {
         return -1;
     }
-
-    if(x > y)
-    {
+    if(x > y) {
         return 1;
     }
-
     return 0;
 }
 
@@ -101,22 +70,16 @@ int compareUInt(
  * retorna:
  * - no retorna ningún valor.
  */
-void generateDataset(
-        unsigned int* data,
-        int n
-){
+void generateDataset( unsigned int* data, int n) {
 
-    for(int i=0;i<n;i++)
-    {
+    for(int i=0;i<n;i++) {
+
         unsigned int a = rand();
-
         unsigned int b = rand();
-
         data[i] = (a<<16)^b;
+
     }
-
 }
-
 
 /**
  * ordena un dataset de menor a mayor.
@@ -128,25 +91,10 @@ void generateDataset(
  * retorna:
  * - no retorna ningún valor.
  */
-void sortDataset(
-        unsigned int* data,
-        int n
-){
-
-    qsort(
-
-        data,
-
-        n,
-
-        sizeof(unsigned int),
-
-        compareUInt
-
-    );
+void sortDataset(unsigned int* data,int n) {
+    qsort(data,n,sizeof(unsigned int),compareUInt);
 
 }
-
 
 /**
  * construye una distribución acumulada
@@ -160,34 +108,18 @@ void sortDataset(
  * retorna:
  * - no retorna ningún valor.
  */
-void buildBiasedDistribution(
-        double* cumulative,
-        int n,
-        double lambda
-){
-
+void buildBiasedDistribution(double* cumulative,int n,double lambda) {
     double total = 0;
-
-    for(int i=0;i<n;i++)
-    {
+    for(int i=0;i<n;i++) {
         total += exp(-lambda*i);
     }
-
     double accumulated = 0;
-
-    for(int i=0;i<n;i++)
-    {
-        accumulated +=
-            exp(-lambda*i)
-            /
-            total;
-
-        cumulative[i] =
-            accumulated;
+    for(int i=0;i<n;i++) {
+        accumulated += exp(-lambda*i)/total;
+        cumulative[i] = accumulated;
     }
 
 }
-
 
 /**
  * selecciona un índice utilizando
@@ -200,36 +132,16 @@ void buildBiasedDistribution(
  * retorna:
  * - índice seleccionado.
  */
-int sampleBiased(
-        double* cumulative,
-        int n
-){
+int sampleBiased(double* cumulative,int n){
+    double r =(double)rand()/RAND_MAX;
 
-    double r =
-
-        (double)
-
-        rand()
-
-        /
-
-        RAND_MAX;
-
-    for(int i=0;i<n;i++)
-    {
-        if(r <= cumulative[i])
-        {
+    for(int i=0;i<n;i++) {
+        if(r <= cumulative[i]){
             return i;
         }
     }
-
     return n-1;
 }
-
-
-
-
-
 
 /**
  * ejecuta uno de los cuatro escenarios base.
@@ -248,78 +160,30 @@ int sampleBiased(
  * retorna:
  * - no retorna ningún valor.
  */
-void runScenario(
-        FILE* csv,
+void runScenario(FILE* csv,unsigned int* data,int n,int ordered,int biased) {
 
-        unsigned int* data,
-
-        int n,
-
-        int ordered,
-
-        int biased
-){
-
-    unsigned int* insertData =
-
-            malloc(
-            n*sizeof(unsigned int)
-            );
-
-    for(int i=0;i<n;i++)
-    {
+    unsigned int* insertData =malloc(n*sizeof(unsigned int));
+    for(int i=0;i<n;i++) {
         insertData[i] = data[i];
     }
-
-
-    if(ordered)
-    {
-        sortDataset(
-                insertData,
-                n
-        );
+    if(ordered){
+        sortDataset(insertData,n);
     }
 
-
     AVLNode* avl = NULL;
-
     SPLAYNode* splay = NULL;
 
-
     double lambda = 0.01;
+    double* cumulative =malloc(n*sizeof(double));
 
-
-    double* cumulative =
-
-            malloc(
-            n*sizeof(double)
-            );
-
-
-    buildBiasedDistribution(
-
-            cumulative,
-
-            n,
-
-            lambda
-
-    );
-
+    buildBiasedDistribution(cumulative,n,lambda);
 
     double avlInsert;
-
     double avlSearch;
-
     double splayInsert;
-
     double splaySearch;
-
-
     double t0;
-
     double t1;
-
 
     /*
      * inserción avl
@@ -327,76 +191,34 @@ void runScenario(
 
     t0 = getTime();
 
-    for(int i=0;i<n;i++)
-    {
-        avl =
-
-        insert_avl(
-
-            avl,
-
-            insertData[i]
-
-        );
+    for(int i=0;i<n;i++) {
+        avl = insert_avl(avl,insertData[i]);
     }
 
     t1 = getTime();
-
-    avlInsert =
-
-            t1 - t0;
-
+    avlInsert = t1 - t0;
 
     /*
      * búsqueda avl
      */
 
     int m = 10*C*n;
-
-
     t0 = getTime();
 
-    for(int i=0;i<m;i++)
-    {
+    for(int i=0;i<m;i++) {
         int idx;
-
-
-        if(biased)
-        {
-            idx =
-
-            sampleBiased(
-
-                cumulative,
-
-                n
-
-            );
+        if(biased) {
+            idx = sampleBiased( cumulative,n);
+        } else{
+            idx = rand()%n;
         }
-
-        else
-        {
-            idx =
-
-            rand()%n;
-        }
-
-
-        search_avl(
-
-            avl,
-
-            insertData[idx]
-
-        );
+        search_avl( avl, insertData[idx]);
 
     }
 
     t1 = getTime();
 
-    avlSearch =
-
-            t1 - t0;
+    avlSearch =t1 - t0;
 
 
     /*
@@ -405,25 +227,11 @@ void runScenario(
 
     t0 = getTime();
 
-    for(int i=0;i<n;i++)
-    {
-        splay =
-
-        insert_splay(
-
-            splay,
-
-            insertData[i]
-
-        );
+    for(int i=0;i<n;i++) {
+        splay = insert_splay(splay,insertData[i]);
     }
-
     t1 = getTime();
-
-    splayInsert =
-
-            t1 - t0;
-
+    splayInsert = t1 - t0;
 
     /*
      * búsqueda splay
@@ -431,93 +239,34 @@ void runScenario(
 
     t0 = getTime();
 
-    for(int i=0;i<m;i++)
-    {
+    for(int i=0;i<m;i++) {
         int idx;
-
-
-        if(biased)
-        {
-            idx =
-
-            sampleBiased(
-
-                cumulative,
-
-                n
-
-            );
+        if(biased) {
+            idx = sampleBiased( cumulative,n);
+        } else {
+            idx = rand()%n;
         }
-
-        else
-        {
-            idx =
-
-            rand()%n;
-        }
-
-
         int found;
-
-
-        splay =
-
-        search_splay(
-
-            splay,
-
-            insertData[idx],
-
-            &found
-
-        );
-
+        splay = search_splay( splay, insertData[idx],&found);
     }
 
     t1 = getTime();
-
-    splaySearch =
-
-            t1 - t0;
+    splaySearch = t1 - t0;
 
 
     /*
      * guardar resultados
      */
 
-    fprintf(
-
-        csv,
-
-        "%d,%d,%d,%lf,%lf,%lf,%lf\n",
-
-        n,
-
-        ordered,
-
-        biased,
-
-        avlInsert,
-
-        avlSearch,
-
-        splayInsert,
-
-        splaySearch
-
-    );
-
+    fprintf( csv,"%d,%d,%d,%lf,%lf,%lf,%lf\n",n,ordered,biased,avlInsert,avlSearch,splayInsert,splaySearch);
 
     /*
      * liberar memoria
      */
 
     freeAVL(avl);
-
     freeSplay(splay);
-
     free(cumulative);
-
     free(insertData);
 
 }
@@ -531,141 +280,45 @@ void runScenario(
  * retorna:
  * - no retorna ningún valor.
  */
-void runBaseExperiments()
-{
+void runBaseExperiments() {
 
-    FILE* csv =
-
-    fopen(
-
-        "base_results.csv",
-
-        "w"
-
-    );
+    FILE* csv =fopen("base_results.csv","w");
+    fprintf(csv,"N,ordered,biased,avl_insert,avl_search,splay_insert,splay_search\n");
 
 
-    fprintf(
-
-        csv,
-
-"N,ordered,biased,avl_insert,avl_search,splay_insert,splay_search\n"
-
-    );
-
-
-    for(int i=0;i<NUM_N;i++)
-    {
-
+    for(int i=0;i<NUM_N;i++) {
         int n = Ns[i];
-
-
-        unsigned int* dataset =
-
-        malloc(
-
-            n*sizeof(unsigned int)
-
-        );
-
-
-        generateDataset(
-
-            dataset,
-
-            n
-
-        );
-
+        unsigned int* dataset =malloc(n*sizeof(unsigned int));
+        generateDataset(dataset,n);
 
         /*
          * escenario a
          */
 
-        runScenario(
-
-            csv,
-
-            dataset,
-
-            n,
-
-            0,
-
-            0
-
-        );
-
+        runScenario(csv,dataset,n,0,0);
 
         /*
          * escenario b
          */
 
-        runScenario(
-
-            csv,
-
-            dataset,
-
-            n,
-
-            0,
-
-            1
-
-        );
-
-
+        runScenario(csv,dataset,n,0,1);
         /*
          * escenario c
          */
 
-        runScenario(
-
-            csv,
-
-            dataset,
-
-            n,
-
-            1,
-
-            0
-
-        );
-
+        runScenario(csv,dataset,n,1,0);
 
         /*
          * escenario d
          */
 
-        runScenario(
-
-            csv,
-
-            dataset,
-
-            n,
-
-            1,
-
-            1
-
-        );
-
-
+        runScenario(csv,dataset,n,1,1);
         free(dataset);
 
     }
-
-
     fclose(csv);
 
 }
-
-
-
-
 
 /**
  * ejecuta el experimento asociado al
@@ -674,222 +327,73 @@ void runBaseExperiments()
  * retorna:
  * - no retorna ningún valor.
  */
-void runSequentialExperiment()
-{
+void runSequentialExperiment() {
 
-    FILE* csv =
+    FILE* csv =fopen("sequential_results.csv","w");
+    fprintf(csv,"m,avl_time,splay_time\n");
 
-    fopen(
+    unsigned int* data = malloc(LARGE_N*sizeof(unsigned int));
+    generateDataset(data,LARGE_N);
 
-        "sequential_results.csv",
-
-        "w"
-
-    );
-
-
-    fprintf(
-
-        csv,
-
-        "m,avl_time,splay_time\n"
-
-    );
-
-
-    unsigned int* data =
-
-    malloc(
-
-        LARGE_N*sizeof(unsigned int)
-
-    );
-
-
-    generateDataset(
-
-        data,
-
-        LARGE_N
-
-    );
-
-
-    sortDataset(
-
-        data,
-
-        LARGE_N
-
-    );
-
+    unsigned int* dataSorted = malloc(LARGE_N*sizeof(unsigned int));
+    for(int i=0;i<LARGE_N;i++) {
+        dataSorted[i] = data[i];
+    }
+    sortDataset(dataSorted, LARGE_N);
 
     AVLNode* avl = NULL;
-
     SPLAYNode* splay = NULL;
 
-
-    for(int i=0;i<LARGE_N;i++)
-    {
-
-        avl =
-
-        insert_avl(
-
-            avl,
-
-            data[i]
-
-        );
-
-
-        splay =
-
-        insert_splay(
-
-            splay,
-
-            data[i]
-
-        );
-
+    for(int i=0;i<LARGE_N;i++) {
+        avl = insert_avl(avl,data[i]);
+        splay =insert_splay(splay,data[i]);
     }
-
-
-    for(int k=1;k<=10;k++)
-    {
-
-        int m =
-
-        (k*LARGE_N)
-
-        /100;
-
-
-        int step =
-
-        LARGE_N
-
-        /m;
-
-
-        double t0;
-
-        double t1;
-
+    for(int k=1;k<=10;k++) {
+        int m = (k*LARGE_N)/100;
+        int step = LARGE_N/m;
+        double t0, t1;
         double avlTime;
-
         double splayTime;
-
 
         /*
          * búsquedas avl
          */
 
         t0 = getTime();
-
-
         int pos = 0;
-
-
-        for(int i=0;i<m;i++)
-        {
-
-            search_avl(
-
-                avl,
-
-                data[pos]
-
-            );
-
-
+        for(int i=0;i<m;i++) {
+            search_avl(avl,dataSorted[pos]);
             pos += step;
-
         }
-
-
         t1 = getTime();
-
-        avlTime =
-
-        t1 - t0;
-
+        avlTime = t1 - t0;
 
         /*
          * búsquedas splay
          */
 
         t0 = getTime();
-
-
         pos = 0;
 
-
-        for(int i=0;i<m;i++)
-        {
-
+        for(int i=0;i<m;i++) {
             int found;
-
-
-            splay =
-
-            search_splay(
-
-                splay,
-
-                data[pos],
-
-                &found
-
-            );
-
-
+            splay = search_splay(splay, dataSorted[pos],&found);
             pos += step;
 
         }
 
-
         t1 = getTime();
-
-        splayTime =
-
-        t1 - t0;
-
-
-        fprintf(
-
-            csv,
-
-            "%d,%lf,%lf\n",
-
-            m,
-
-            avlTime,
-
-            splayTime
-
-        );
+        splayTime =t1 - t0;
+        fprintf(csv,"%d,%lf,%lf\n", m, avlTime, splayTime);
 
     }
 
-
     fclose(csv);
-
     freeAVL(avl);
-
     freeSplay(splay);
-
     free(data);
 
 }
-
-
-
-
-
-
-
 
 /**
  * ejecuta el experimento asociado al
@@ -898,248 +402,75 @@ void runSequentialExperiment()
  * retorna:
  * - no retorna ningún valor.
  */
-void runWorkingSetExperiment()
-{
+void runWorkingSetExperiment() {
 
-    FILE* csv =
-
-    fopen(
-
-        "working_set_results.csv",
-
-        "w"
-
-    );
-
-
-    fprintf(
-
-        csv,
-
-        "w,avl_time,splay_time\n"
-
-    );
-
-
-    unsigned int* data =
-
-    malloc(
-
-        LARGE_N*sizeof(unsigned int)
-
-    );
-
-
-    generateDataset(
-
-        data,
-
-        LARGE_N
-
-    );
-
+    FILE* csv =fopen("working_set_results.csv","w");
+    fprintf(csv,"w,avl_time,splay_time\n");
+    unsigned int* data =malloc(LARGE_N*sizeof(unsigned int));
+    generateDataset(data,LARGE_N);
 
     AVLNode* avl = NULL;
-
     SPLAYNode* splay = NULL;
 
-
-    for(int i=0;i<LARGE_N;i++)
-    {
-
-        avl =
-
-        insert_avl(
-
-            avl,
-
-            data[i]
-
-        );
-
-
-        splay =
-
-        insert_splay(
-
-            splay,
-
-            data[i]
-
-        );
-
+    for(int i=0;i<LARGE_N;i++) {
+        avl =insert_avl(avl,data[i]);
+        splay =insert_splay(splay,data[i]);
     }
 
+    int values[6] = { 10, 100, 1000, 10000, 100000, 1000000 };
 
-    int values[6] =
-
-    {
-
-        10,
-
-        100,
-
-        1000,
-
-        10000,
-
-        100000,
-
-        1000000
-
-    };
-
-
-    int M =
-
-    10*C*LARGE_N;
-
-
-    for(int k=0;k<6;k++)
-    {
+    int M = 10*C*LARGE_N;
+    for(int k=0;k<6;k++) {
 
         int W = values[k];
+        unsigned int* working = malloc(W*sizeof(unsigned int));
 
-
-        unsigned int* working =
-
-        malloc(
-
-            W*sizeof(unsigned int)
-
-        );
-
-
-        for(int i=0;i<W;i++)
-        {
-
-            working[i] =
-
-            data[
-
-            rand()%LARGE_N
-
-            ];
+        for(int i=0;i<W;i++) {
+            working[i] = data[rand()%LARGE_N];
 
         }
-
-
         double t0;
-
         double t1;
-
         double avlTime;
-
         double splayTime;
-
 
         /*
          * avl
          */
 
         t0 = getTime();
-
-
-        for(int i=0;i<M;i++)
-        {
+        for(int i=0;i<M;i++) {
 
             unsigned int key =
-
-            working[
-
-            rand()%W
-
-            ];
-
-
-            search_avl(
-
-                avl,
-
-                key
-
-            );
+            working[rand()%W];
+            search_avl( avl, key);
 
         }
-
-
         t1 = getTime();
-
-        avlTime =
-
-        t1 - t0;
-
-
+        avlTime = t1 - t0;
         /*
          * splay
          */
 
         t0 = getTime();
-
-
-        for(int i=0;i<M;i++)
-        {
-
-            unsigned int key =
-
-            working[
-
-            rand()%W
-
-            ];
-
-
+        for(int i=0;i<M;i++) {
+            unsigned int key = working[ rand()%W];
             int found;
-
-
-            splay =
-
-            search_splay(
-
-                splay,
-
-                key,
-
-                &found
-
-            );
+            splay = search_splay( splay, key,&found);
 
         }
 
 
         t1 = getTime();
+        splayTime = t1 - t0;
 
-        splayTime =
-
-        t1 - t0;
-
-
-        fprintf(
-
-            csv,
-
-            "%d,%lf,%lf\n",
-
-            W,
-
-            avlTime,
-
-            splayTime
-
-        );
-
-
+        fprintf( csv,"%d,%lf,%lf\n",W,avlTime,splayTime);
         free(working);
-
     }
 
 
     fclose(csv);
-
     freeAVL(avl);
-
     freeSplay(splay);
-
     free(data);
-
 }

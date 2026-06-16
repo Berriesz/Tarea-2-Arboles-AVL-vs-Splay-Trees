@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include "avl_tree/avl.h"
+#include "splay_tree/splay.h"
 
 
 int main()
@@ -16,7 +18,6 @@ int main()
     runBaseExperiments();
 
     printf("experimentos base finalizados.\n");
-
 
     printf("iniciando experimento sequential access...\n");
 

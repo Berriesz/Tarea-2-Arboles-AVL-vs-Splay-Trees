@@ -37,3 +37,7 @@ target_link_libraries(
         m
 
 )
+
+if(WIN32)
+    target_link_options(TAREA2ALGORITMOS PRIVATE -Wl,--stack,134217728)  # 128 MB
+endif()

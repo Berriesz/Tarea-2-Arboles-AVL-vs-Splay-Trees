@@ -123,43 +123,43 @@ SPLAYNode* splay(SPLAYNode* root, unsigned int key) {
     }
 
     if (key < root->key) {
+
         if (root->izq == NULL) {
-            return root;
+            return root; // key no está, root queda como "padre"
         }
 
-        // Zig-Zig
         if (key < root->izq->key) {
+            // Zig-Zig
             root->izq->izq = splay(root->izq->izq, key);
             root = zig_splay(root);
         }
-
-        // Zig-Zag
         else if (key > root->izq->key) {
+            // Zig-Zag
             root->izq->der = splay(root->izq->der, key);
             if (root->izq->der != NULL) {
                 root->izq = zag_splay(root->izq);
             }
         }
+        // si key == root->izq->key, no se hace nada extra acá
 
         if (root->izq == NULL) {
             return root;
         }
         return zig_splay(root);
     }
-
     else {
+
         if (root->der == NULL) {
             return root;
         }
 
-        // Zag-Zag
         if (key > root->der->key) {
+            // Zag-Zag
             root->der->der = splay(root->der->der, key);
             root = zag_splay(root);
         }
-
-        // Zag-Zig
         else if (key < root->der->key) {
+            // Zag-Zig
             root->der->izq = splay(root->der->izq, key);
             if (root->der->izq != NULL) {
                 root->der = zig_splay(root->der);
@@ -169,7 +169,6 @@ SPLAYNode* splay(SPLAYNode* root, unsigned int key) {
         if (root->der == NULL) {
             return root;
         }
-
         return zag_splay(root);
     }
 }
@@ -199,37 +198,6 @@ SPLAYNode* search_splay(
 }
 
 /**
- * Inserta una nueva clave siguiendo las reglas de un
- * Árbol Binario de Búsqueda (ABB/BST) tradicional.
- *
- * No realiza operaciones de splay.
- *
- * Retorna la raíz actualizada del subárbol.
- */
-SPLAYNode* insertBST(SPLAYNode* root, unsigned int key) {
-
-    if (root == NULL) {
-        SPLAYNode* nuevo = (SPLAYNode*) malloc(sizeof(SPLAYNode));
-        nuevo->key = key;
-        nuevo->izq = NULL;
-        nuevo->der = NULL;
-        nuevo->height = 0;
-        return nuevo;
-    }
-
-    if (key <= root->key) {
-        root->izq = insertBST(root->izq, key);
-    }
-    else {
-        root->der = insertBST(root->der, key);
-    }
-
-    updateHeight_splay(root);
-
-    return root;
-}
-
-/**
  * Inserta una nueva clave en el árbol.
  *
  * Primero realiza una inserción ABB tradicional
@@ -239,22 +207,44 @@ SPLAYNode* insertBST(SPLAYNode* root, unsigned int key) {
  * Retorna la nueva raíz.
  */
 SPLAYNode* insert_splay(SPLAYNode* root, unsigned int key) {
+    if (root == NULL) {
+        SPLAYNode* nuevo = malloc(sizeof(SPLAYNode));
+        nuevo->key = key;
+        nuevo->izq = NULL;
+        nuevo->der = NULL;
+        nuevo->height = 0;
+        return nuevo;
+    }
 
-    root = insertBST(root, key);
+    root = splay(root, key);  // splay primero, deja el árbol cerca de balanceado
 
-    root = splay(root, key);
+    if (root->key == key) {
+        return root;
+    }
 
-    return root;
+    SPLAYNode* nuevo = malloc(sizeof(SPLAYNode));
+    nuevo->key = key;
+
+    if (key < root->key) {
+        nuevo->der = root;
+        nuevo->izq = root->izq;
+        root->izq = NULL;
+    } else {
+        nuevo->izq = root;
+        nuevo->der = root->der;
+        root->der = NULL;
+    }
+
+    nuevo->height = 0; // o recalcularla si la usan
+
+    return nuevo;
 }
 
-void freeSplay(SPLAYNode* root)
-{
+void freeSplay(SPLAYNode* root) {
     if(root==NULL)
         return;
 
     freeSplay(root->izq);
-
     freeSplay(root->der);
-
     free(root);
 }
