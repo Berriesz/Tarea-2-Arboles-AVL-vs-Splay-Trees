@@ -1,5 +1,6 @@
 #include "avl.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 int height(AVLNode *node) {
     if (node == NULL){
@@ -117,7 +118,7 @@ AVLNode* balance(AVLNode *node) {
  * Parámetros: node → raíz del subárbol, key → clave a insertar
  * Retorna: nueva raíz del subárbol (puede cambiar por rotaciones)
  */
-AVLNode* insert(AVLNode *node, unsigned int key) {
+AVLNode* insert_avl(AVLNode *node, unsigned int key) {
     // Caso base
     if (node == NULL) {
         AVLNode *new = (AVLNode*)malloc(sizeof(AVLNode));
@@ -130,11 +131,11 @@ AVLNode* insert(AVLNode *node, unsigned int key) {
 
     // recursivo
     if (key < node->key)
-        node->izq = insert(node->izq, key);
+        node->izq = insert_avl(node->izq, key);
     else if (key > node->key)
-        node->der = insert(node->der, key);
+        node->der = insert_avl(node->der, key);
     else
-        return node; 
+        return node;
 
     updateHeight(node);
     return balance(node);
@@ -148,7 +149,7 @@ AVLNode* insert(AVLNode *node, unsigned int key) {
  * Parámetros: node → raíz del subárbol, key → clave a buscar
  * Retorna: 1 si se encuentra, 0 si no.
  */
-int search(AVLNode *node, unsigned int key) {
+int search_avl(AVLNode *node, unsigned int key) {
     if (node == NULL)
         return 0; // no existe
 
@@ -156,7 +157,20 @@ int search(AVLNode *node, unsigned int key) {
         return 1; // encontrado
 
     if (key < node->key)
-        return search(node->izq, key);
+        return search_avl(node->izq, key);
     else
-        return search(node->der, key);
+        return search_avl(node->der, key);
+}
+
+
+void freeAVL(AVLNode* root)
+{
+    if(root==NULL)
+        return;
+
+    freeAVL(root->izq);
+
+    freeAVL(root->der);
+
+    free(root);
 }

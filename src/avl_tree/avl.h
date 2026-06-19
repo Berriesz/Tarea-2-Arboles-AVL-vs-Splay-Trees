@@ -19,10 +19,10 @@ AVLNode* zig_zag(AVLNode *z);
 AVLNode* zag_zig(AVLNode *z);
 
 AVLNode* balance(AVLNode *node);
-AVLNode* insert(AVLNode *node, unsigned int key);
-int search(AVLNode *node, unsigned int key);
+AVLNode* insert_avl(AVLNode *node, unsigned int key);
+int search_avl(AVLNode *node, unsigned int key);
 
-
+void freeAVL(AVLNode* root);
 
 
 

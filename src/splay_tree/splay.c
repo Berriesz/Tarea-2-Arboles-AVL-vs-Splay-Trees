@@ -1,10 +1,11 @@
 #include "splay.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /**
  * Retorna la altura de un nodo.
  */
-int height(SPLAYNode *node) {
+int height_splay(SPLAYNode *node) {
     if (node == NULL){
         return -1;
     }
@@ -17,9 +18,9 @@ int height(SPLAYNode *node) {
  *
  * height(node) = 1 + max(height(izq), height(der))
  */
-void updateHeight(SPLAYNode *node) {
-    int hl = height(node->izq);
-    int hr = height(node->der);
+void updateHeight_splay(SPLAYNode *node) {
+    int hl = height_splay(node->izq);
+    int hr = height_splay(node->der);
     int max_height;
     if(hl > hr) {
         max_height = hl;
@@ -35,15 +36,15 @@ void updateHeight(SPLAYNode *node) {
  * y(x(A,B), C) -> x(A, y(B,C))
  * Recibe la raíz del subárbol desbalanceado (y) y retorna la nueva raíz (x).
  */
-SPLAYNode* zig(SPLAYNode *y) {
+SPLAYNode* zig_splay(SPLAYNode *y) {
     SPLAYNode *x = y->izq;
     SPLAYNode *B = x->der;
 
     x->der = y;
     y->izq = B;
 
-    updateHeight(y);
-    updateHeight(x);
+    updateHeight_splay(y);
+    updateHeight_splay(x);
 
     return x;
 }
@@ -53,15 +54,15 @@ SPLAYNode* zig(SPLAYNode *y) {
  * y(A, x(B,C)) -> x(y(A,B), C)
  * Recibe la raíz del subárbol desbalanceado (y) y retorna la nueva raíz (x).
  */
-SPLAYNode* zag(SPLAYNode *y) {
+SPLAYNode* zag_splay(SPLAYNode *y) {
     SPLAYNode *x = y->der;
     SPLAYNode *B = x->izq;
 
     x->izq = y;
     y->der = B;
 
-    updateHeight(y);
-    updateHeight(x);
+    updateHeight_splay(y);
+    updateHeight_splay(x);
 
     return x;
 }
@@ -71,9 +72,9 @@ SPLAYNode* zag(SPLAYNode *y) {
  * z(y(A, x(B,C)), D) -> x(y(A,B), z(C,D))
  * Primero zag sobre el hijo izquierdo, luego zig sobre z.
  */
-SPLAYNode* zig_zag(SPLAYNode *z) {
-    z->izq = zag(z->izq);
-    return zig(z);
+SPLAYNode* zig_zag_splay(SPLAYNode *z) {
+    z->izq = zag_splay(z->izq);
+    return zig_splay(z);
 }
 
 /**
@@ -81,9 +82,9 @@ SPLAYNode* zig_zag(SPLAYNode *z) {
  * z(A, y(x(B,C), D)) -> x(z(A,B), y(C,D))
  * Primero zig sobre el hijo derecho, luego zag sobre z.
  */
-SPLAYNode* zag_zig(SPLAYNode *z) {
-    z->der = zig(z->der);
-    return zag(z);
+SPLAYNode* zag_zig_splay(SPLAYNode *z) {
+    z->der = zig_splay(z->der);
+    return zag_splay(z);
 }
 
 /**
@@ -91,9 +92,9 @@ SPLAYNode* zag_zig(SPLAYNode *z) {
  * z(y(x(A,B), C), D) -> x(A, y(B, z(C,D)))
  * Primero zig sobre z, luego zig sobre la nueva raíz.
  */
-SPLAYNode* zig_zig(SPLAYNode *z) {
-    z = zig(z);
-    return zig(z);
+SPLAYNode* zig_zig_splay(SPLAYNode *z) {
+    z = zig_splay(z);
+    return zig_splay(z);
 }
 
 /**
@@ -102,8 +103,8 @@ SPLAYNode* zig_zig(SPLAYNode *z) {
  * Primero zag sobre z, luego zag sobre la nueva raíz.
  */
 SPLAYNode* zag_zag(SPLAYNode *z) {
-    z = zag(z);
-    return zag(z);
+    z = zag_splay(z);
+    return zag_splay(z);
 }
 
 /**
@@ -122,54 +123,53 @@ SPLAYNode* splay(SPLAYNode* root, unsigned int key) {
     }
 
     if (key < root->key) {
+
         if (root->izq == NULL) {
-            return root;
+            return root; // key no está, root queda como "padre"
         }
 
-        // Zig-Zig
         if (key < root->izq->key) {
+            // Zig-Zig
             root->izq->izq = splay(root->izq->izq, key);
-            root = zig(root);
+            root = zig_splay(root);
         }
-
-        // Zig-Zag
         else if (key > root->izq->key) {
+            // Zig-Zag
             root->izq->der = splay(root->izq->der, key);
             if (root->izq->der != NULL) {
-                root->izq = zag(root->izq);
+                root->izq = zag_splay(root->izq);
             }
         }
+        // si key == root->izq->key, no se hace nada extra acá
 
         if (root->izq == NULL) {
             return root;
         }
-        return zig(root);
+        return zig_splay(root);
     }
-
     else {
+
         if (root->der == NULL) {
             return root;
         }
 
-        // Zag-Zag
         if (key > root->der->key) {
+            // Zag-Zag
             root->der->der = splay(root->der->der, key);
-            root = zag(root);
+            root = zag_splay(root);
         }
-
-        // Zag-Zig
         else if (key < root->der->key) {
+            // Zag-Zig
             root->der->izq = splay(root->der->izq, key);
             if (root->der->izq != NULL) {
-                root->der = zig(root->der);
+                root->der = zig_splay(root->der);
             }
         }
 
         if (root->der == NULL) {
             return root;
         }
-
-        return zag(root);
+        return zag_splay(root);
     }
 }
 
@@ -182,40 +182,17 @@ SPLAYNode* splay(SPLAYNode* root, unsigned int key) {
  *
  * Retorna true si la clave existe en el árbol.
  */
-bool search(unsigned int key) {
+SPLAYNode* search_splay(
+        SPLAYNode* root,
+        unsigned int key,
+        int* found
+){
 
-    root = splay(root, key);
+    root = splay(root,key);
 
-    return (root != NULL && root->key == key);
-}
-
-/**
- * Inserta una nueva clave siguiendo las reglas de un
- * Árbol Binario de Búsqueda (ABB/BST) tradicional.
- *
- * No realiza operaciones de splay.
- *
- * Retorna la raíz actualizada del subárbol.
- */
-SPLAYNode* insertBST(SPLAYNode* root, unsigned int key) {
-
-    if (root == NULL) {
-        SPLAYNode* nuevo = new SPLAYNode;
-        nuevo->key = key;
-        nuevo->izq = NULL;
-        nuevo->der = NULL;
-        nuevo->height = 0;
-        return nuevo;
-    }
-
-    if (key <= root->key) {
-        root->izq = insertBST(root->izq, key);
-    }
-    else {
-        root->der = insertBST(root->der, key);
-    }
-
-    updateHeight(root);
+    *found =
+       (root != NULL &&
+        root->key == key);
 
     return root;
 }
@@ -229,11 +206,45 @@ SPLAYNode* insertBST(SPLAYNode* root, unsigned int key) {
  *
  * Retorna la nueva raíz.
  */
-SPLAYNode* insert(SPLAYNode* root, unsigned int key) {
+SPLAYNode* insert_splay(SPLAYNode* root, unsigned int key) {
+    if (root == NULL) {
+        SPLAYNode* nuevo = malloc(sizeof(SPLAYNode));
+        nuevo->key = key;
+        nuevo->izq = NULL;
+        nuevo->der = NULL;
+        nuevo->height = 0;
+        return nuevo;
+    }
 
-    root = insertBST(root, key);
+    root = splay(root, key);  // splay primero, deja el árbol cerca de balanceado
 
-    root = splay(root, key);
+    if (root->key == key) {
+        return root;
+    }
 
-    return root;
+    SPLAYNode* nuevo = malloc(sizeof(SPLAYNode));
+    nuevo->key = key;
+
+    if (key < root->key) {
+        nuevo->der = root;
+        nuevo->izq = root->izq;
+        root->izq = NULL;
+    } else {
+        nuevo->izq = root;
+        nuevo->der = root->der;
+        root->der = NULL;
+    }
+
+    nuevo->height = 0; // o recalcularla si la usan
+
+    return nuevo;
+}
+
+void freeSplay(SPLAYNode* root) {
+    if(root==NULL)
+        return;
+
+    freeSplay(root->izq);
+    freeSplay(root->der);
+    free(root);
 }
